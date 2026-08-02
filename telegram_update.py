@@ -5,7 +5,7 @@ from httpx import get, post
 
 token = str(sys.argv[1])
 main = get(
-    "https://api.github.com/repos/TeamPGM/PagerMaid_Plugins_Pyro/commits/v2"
+    "https://api.github.com/repos/qiuxiuya/PagerMaid_Plugins_Pyro/commits/qiuxiuya"
 ).json()
 text = (
     (
@@ -16,7 +16,7 @@ text = (
                 + " \n\n🔨 ["
                 + main["sha"][:7]
             )
-            + "](https://github.com/TeamPGM/PagerMaid_Plugins_Pyro/commit/"
+            + "](https://github.com/qiuxiuya/PagerMaid_Plugins_Pyro/commit/"
         )
         + main["sha"]
     )
