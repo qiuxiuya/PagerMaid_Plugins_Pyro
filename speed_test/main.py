@@ -16,8 +16,10 @@ from pagermaid.utils import safe_remove
 from pagermaid.utils.bot_utils import edit_delete
 from pagermaid.enums import Client, Message, AsyncClient
 from pagermaid.utils import lang
+from pagermaid.dependence import sqlite
 
 speedtest_path = "/var/lib/pagermaid/plugins/speedtest-cli/speedtest"
+SPEEDTEST_SERVER_KEY = "speedtest.server_id"
 
 async def download_cli(request):
     speedtest_version = "1.2.0"
@@ -82,11 +84,11 @@ async def start_speedtest(command):
         stderr = str(stderr.decode('gbk').strip())
     return stdout,stderr,proc.returncode
 
-async def run_speedtest(request: AsyncClient, message: Message):
+async def run_speedtest(request: AsyncClient, server_id: str = ""):
     if not exists(speedtest_path):
         await download_cli(request)
 
-    command = (f"sudo {speedtest_path} --accept-license --accept-gdpr -s {message.arguments} -f json") if str.isdigit(message.arguments) else (f"sudo {speedtest_path} --accept-license --accept-gdpr -f json")
+    command = (f"sudo {speedtest_path} --accept-license --accept-gdpr -s {server_id} -f json") if str.isdigit(server_id) else (f"sudo {speedtest_path} --accept-license --accept-gdpr -f json")
 
     outs,errs,code = await start_speedtest(command)
     if code == 0:
@@ -106,7 +108,7 @@ async def run_speedtest(request: AsyncClient, message: Message):
         f"Download: `{await unit_convert(result['download']['bandwidth'])}` \n"
         f"Latency: `{result['ping']['latency']} ms`\n"
         f"Timestamp: `{result['timestamp']}`"
-        #f"\nDebug: `\nmessage.arguments.len:{len(message.arguments)}\nresult_str: {outs}\nerrs:{errs}\nreturncode:{code}`"
+        #f"\nDebug: `\nserver_id:{server_id}\nresult_str: {outs}\nerrs:{errs}\nreturncode:{code}`"
     )
 
     if result["result"]["url"]:
@@ -142,15 +144,33 @@ async def get_all_ids(request):
 @listener(command="sp",
           need_admin=True,
           description=lang('speedtest_des'),
-          parameters="(list/server id)")
+          parameters="(list|set <server id>|clean|<server id>)")
 async def speedtest(client: Client, message: Message, request: AsyncClient):
     """ Tests internet speed using speedtest. """
     msg = message
-    if message.arguments == "list":
+    arg = message.arguments.strip()
+    param = message.parameter
+
+    if arg == "list":
         des, photo = await get_all_ids(request)
-    elif len(message.arguments) == 0 or str.isdigit(message.arguments):
+    elif param and param[0] == "set":
+        if len(param) < 2:
+            return await msg.edit("请提供服务器 ID，用法：`sp set <server id>`")
+        server_id = param[1]
+        if not str.isdigit(server_id):
+            return await msg.edit("服务器 ID 必须是数字")
+        sqlite[SPEEDTEST_SERVER_KEY] = server_id
+        return await msg.edit(f"已持久化测速点：`{server_id}`")
+    elif param and param[0] == "clean":
+        saved = sqlite.get(SPEEDTEST_SERVER_KEY)
+        if saved is None:
+            return await msg.edit("没有已持久化的测速点")
+        del sqlite[SPEEDTEST_SERVER_KEY]
+        return await msg.edit("已清除持久化测速点")
+    elif len(arg) == 0 or str.isdigit(arg):
         msg: Message = await message.edit(lang('speedtest_processing'))
-        des, photo = await run_speedtest(request,message)
+        server_id = arg if str.isdigit(arg) else sqlite.get(SPEEDTEST_SERVER_KEY, "")
+        des, photo = await run_speedtest(request, server_id)
     else:
         return await msg.edit(lang('arg_error'))
     if not photo:
