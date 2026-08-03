@@ -231,13 +231,20 @@ class CheckinTasks:
         self.save_to_file()
 
 
-async def resolve_cid(text: str, message: Message) -> int:
+async def resolve_cid(text: str, message: Message) -> int | str:
+    """Resolve target to ID; fallback to original string like checkin.ts."""
     text = text.strip()
     try:
         return int(text)
     except ValueError:
         pass
-    for name in {text, text.lstrip("@")}:
+    names = {text, text.lstrip("@")}
+    for name in names:
+        try:
+            peer = await message.client.resolve_peer(name)
+            return peer.user_id if hasattr(peer, "user_id") else peer.channel_id if hasattr(peer, "channel_id") else peer.chat_id
+        except Exception:
+            pass
         try:
             entity = await message.client.get_users(name)
             return entity.id
@@ -248,7 +255,8 @@ async def resolve_cid(text: str, message: Message) -> int:
             return entity.id
         except Exception:
             pass
-    raise ValueError(f"Cannot resolve target: {text}")
+    # Fallback: keep original string, let send_message resolve it at runtime
+    return text
 
 
 checkin_tasks = CheckinTasks()
