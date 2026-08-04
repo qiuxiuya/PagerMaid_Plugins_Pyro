@@ -192,6 +192,10 @@ class CheckinTasks:
     def _register_job_for_date(self, task: CheckinTask, date: datetime.date):
         t = self.config.random_time()
         run_time = datetime.datetime.combine(date, t)
+        now = datetime.datetime.now()
+        # 如果生成的时间点已过，则顺延到下一天
+        if run_time <= now:
+            run_time += datetime.timedelta(days=1)
         scheduler.add_job(
             self.send_message,
             "date",

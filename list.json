@@ -1032,10 +1032,10 @@
         },
         {
             "name": "checkin",
-            "version": "1.0",
+            "version": "1.1",
             "section": "chat",
-            "maintainer": "xtaodada",
-            "size": "11.611 kb",
+            "maintainer": "qiuxiuya",
+            "size": "12.772 kb",
             "supported": true,
             "des_short": "checkin 在指定时间范围内随机发送签到消息",
             "des": "在全局设定的时间范围内随机发送签到提醒消息。\n\n指令：`,checkin`\n\n# 设置全局签到时间范围\n`,checkin start 8:00 end 20:00`\n\n# 添加签到任务\n`,checkin add @username 今天也要记得打卡哦`\n`,checkin add 123456789 该签到了`\n\n# 可用命令\n\n`,checkin start HH:MM end HH:MM` - 设置全局签到时间范围\n`,checkin add <用户名/ID> <消息内容>` - 添加签到任务，每天在全局时间范围内随机时间发送消息\n`,checkin rm <任务ID>` - 删除指定任务\n`,checkin pause <任务ID>` - 暂停指定任务\n`,checkin resume <任务ID>` - 恢复指定任务\n`,checkin status` - 查看当前时间范围和任务列表\n`,checkin h` - 显示帮助\n\n# 注意\n\n- 时间范围采用 24 小时制，例如 `8:00`、`20:30`。\n- 每天每个任务的发送时间都会重新在设定范围内随机生成，因此每天的发送时间不同。\n- 任务目标支持用户名、用户 ID、群组链接等可被 Pyrogram 解析的标识。\n- 添加任务时消息内容不能为空。"
