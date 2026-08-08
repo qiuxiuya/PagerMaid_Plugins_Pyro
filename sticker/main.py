@@ -239,14 +239,14 @@ class Sticker:
         return (
             f"欢迎使用 sticker 插件\n\n"
             f"将自动保存到贴纸包：{pack}\n\n"
-            f"使用命令 <code>,{alias_command('s')} 贴纸包名</code> 自定义保存贴纸包\n"
-            f"使用命令 <code>,{alias_command('s')} cancel</code> 取消自定义保存贴纸包"
+            f"使用命令 <code>,{alias_command('s')} set 贴纸包名</code> 自定义保存贴纸包\n"
+            f"使用命令 <code>,{alias_command('s')} clean</code> 取消自定义保存贴纸包"
         )
 
 
 @listener(
     command="s",
-    parameters="[贴纸包名/cancel]",
+    parameters="[set/clean 贴纸包名]",
     description="保存贴纸到自己的贴纸包",
     need_admin=True,
 )
@@ -258,7 +258,12 @@ async def sticker(message: Message):
         if not message.arguments:
             return await message.edit(one_sticker.get_config())
         elif len(message.parameter) == 1:
-            if message.arguments == "cancel":
+            if message.arguments == "clean":
+                if one_sticker.get_custom_sticker_set() is None:
+                    return await message.edit("还没有设置自定义保存贴纸包")
+                one_sticker.del_custom_sticker_set()
+                return await message.edit("移除自定义保存贴纸包成功")
+            elif message.arguments == "cancel":
                 if one_sticker.get_custom_sticker_set() is None:
                     return await message.edit("还没有设置自定义保存贴纸包")
                 one_sticker.del_custom_sticker_set()
@@ -273,6 +278,17 @@ async def sticker(message: Message):
                     return await message.edit(f"设置自定义贴纸包失败：{e}")
                 one_sticker.set_custom_sticker_get(message.arguments)
                 return await message.edit("设置自定义保存贴纸包成功")
+        elif len(message.parameter) == 2 and message.parameter[0] == "set":
+            pack_name = message.parameter[1]
+            one_sticker.sticker_set = pack_name
+            try:
+                await one_sticker.check_pack_full()
+            except NoStickerSetNameError:
+                pass
+            except Exception as e:
+                return await message.edit(f"设置自定义贴纸包失败：{e}")
+            one_sticker.set_custom_sticker_get(pack_name)
+            return await message.edit("设置自定义保存贴纸包成功")
         else:
             return await message.edit("参数错误")
     try:
