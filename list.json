@@ -1199,6 +1199,16 @@
             "supported": true,
             "des_short": "aban 封禁管理",
             "des": "封禁管理（踢出/封禁/解封/禁言/解禁言/批量封禁/批量解封/刷新）。"
+        },
+        {
+            "name": "whatanime",
+            "version": "1.0",
+            "section": "chat",
+            "maintainer": "qiuxiuya",
+            "size": "2.26 kb",
+            "supported": true,
+            "des_short": "whatanime 动漫出处识别",
+            "des": "回复一条包含图片的消息，发送 ,anime 即可通过 @WhatAnimeBetaBot 识别出处。"
         }
     ]
 }
