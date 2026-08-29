@@ -858,7 +858,7 @@ class Command:
             )
         if action not in ("allow", "ban", "only", "none"):
             return await self.help("vip")
-        action == "none" and setting.delete("action") or setting.set("action", action)
+        action == "none" and setting.delete("premium") or setting.set("premium", action)
         await self._edit(lang(f"premium_set_{action}"))
 
     async def groups_in_common(self, count: Optional[int]):
@@ -1321,6 +1321,7 @@ class TheOrder:
             try:
                 target, skip_log = await self.queue.get()
                 action = setting.get("action", "ban")
+                # Handle all action types: ban, delete, none, allow, only, archive
                 if action in ("ban", "delete"):
                     if not await exec_api(bot.block_user(user_id=target)):
                         console.debug(f"Failed to block user {target}")
