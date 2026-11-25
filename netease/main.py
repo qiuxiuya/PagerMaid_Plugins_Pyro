@@ -1,6 +1,7 @@
-g""" PagerMaid Netease Plugin , Thanks to @Music163bot """
+""" PagerMaid Netease Plugin , Thanks to @Music163bot """
 
 import re
+from typing import Optional
 
 from pyrogram.errors import YouBlockedUser
 from pyrogram import filters
@@ -20,7 +21,7 @@ i.e.
 """
 
 
-def _clean_caption(caption: str | None) -> str | None:
+def _clean_caption(caption: Optional[str]) -> Optional[str]:
     """移除音频说明中最后一行的署名（如 "via @xxx"）。"""
     if not caption:
         return caption
@@ -98,8 +99,9 @@ async def netease_music(message: Message):
     if not message.arguments:
         return await message.edit(Netease_Help_Msg)
     await netease_start()
-    if message.arguments.startswith("http"):
-        return await netease_url(message.arguments, message)
+    url_match = re.search(r"https?://\S+", message.arguments, re.IGNORECASE)
+    if url_match:
+        return await netease_url(url_match.group(), message)
     if message.arguments.isdigit():
         return await netease_id(message.arguments, message)
     return await netease_search(message.arguments, message)
