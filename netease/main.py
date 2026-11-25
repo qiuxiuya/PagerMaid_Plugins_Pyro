@@ -1,4 +1,6 @@
-""" PagerMaid Netease Plugin , Thanks to @Music163bot """
+g""" PagerMaid Netease Plugin , Thanks to @Music163bot """
+
+import re
 
 from pyrogram.errors import YouBlockedUser
 from pyrogram import filters
@@ -16,6 +18,31 @@ i.e.
 `,{alias_command('netease')} https://music.163.com/#/song?id=1430702717`  # 通过歌曲链接点歌
 `,{alias_command('netease')} 1430702717`  # 通过歌曲 ID 点歌
 """
+
+
+def _clean_caption(caption: str | None) -> str | None:
+    """移除音频说明中最后一行的署名（如 "via @xxx"）。"""
+    if not caption:
+        return caption
+    lines = caption.splitlines()
+    while lines and not lines[-1].strip():
+        lines.pop()
+    if lines and re.search(r"via\s*@", lines[-1], re.IGNORECASE):
+        lines.pop()
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return "\n".join(lines).strip()
+
+
+async def _copy_audio(answer: Message, message: Message) -> None:
+    """转发音频到目标会话，并去掉说明末尾的 via 署名行。"""
+    await answer.copy(
+        message.chat.id,
+        caption=_clean_caption(answer.caption),
+        reply_to_message_id=message.reply_to_message_id,
+        message_thread_id=message.message_thread_id,
+    )
+    await message.safe_delete()
 
 
 async def netease_start() -> None:
@@ -41,12 +68,7 @@ async def netease_search(keyword: str, message: Message):
         await conv.mark_as_read()
         answer: Message = await conv.get_response(filters=filters.audio)
         await conv.mark_as_read()
-        await answer.copy(
-            message.chat.id,
-            reply_to_message_id=message.reply_to_message_id,
-            message_thread_id=message.message_thread_id,
-        )
-        await message.safe_delete()
+        await _copy_audio(answer, message)
 
 
 async def netease_url(url: str, message: Message):
@@ -55,12 +77,7 @@ async def netease_url(url: str, message: Message):
         await conv.mark_as_read()
         answer: Message = await conv.get_response(filters=filters.audio)
         await conv.mark_as_read()
-        await answer.copy(
-            message.chat.id,
-            reply_to_message_id=message.reply_to_message_id,
-            message_thread_id=message.message_thread_id,
-        )
-        await message.safe_delete()
+        await _copy_audio(answer, message)
 
 
 async def netease_id(music_id: str, message: Message):
@@ -69,12 +86,7 @@ async def netease_id(music_id: str, message: Message):
         await conv.mark_as_read()
         answer: Message = await conv.get_response(filters=filters.audio)
         await conv.mark_as_read()
-        await answer.copy(
-            message.chat.id,
-            reply_to_message_id=message.reply_to_message_id,
-            message_thread_id=message.message_thread_id,
-        )
-        await message.safe_delete()
+        await _copy_audio(answer, message)
 
 
 @listener(
